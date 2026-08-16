@@ -70,7 +70,7 @@ Clone or copy skills to your global agent skills directory:
 
 ```bash
 # Clone this repository
-git clone https://github.com/<your-username>/skills.git ~/skills
+git clone https://github.com/Rohit1024/skills.git ~/skills
 
 # Symlink or copy any skill globally
 mkdir -p ~/.gemini/skills
@@ -83,7 +83,7 @@ Install directly into your target workspace:
 
 ```bash
 mkdir -p .agents/skills/setup-teaching-site
-curl -sSL https://raw.githubusercontent.com/<your-username>/skills/main/skills/productivity/setup-teaching-site/SKILL.md -o .agents/skills/setup-teaching-site/SKILL.md
+curl -sSL https://raw.githubusercontent.com/Rohit1024/skills/main/skills/productivity/setup-teaching-site/SKILL.md -o .agents/skills/setup-teaching-site/SKILL.md
 ```
 
 ### Method 3 — Via skills-lock.json
@@ -93,7 +93,7 @@ Add the skill entry to your project's `skills-lock.json`:
 ```json
 {
   "setup-teaching-site": {
-    "source": "<your-username>/skills",
+    "source": "Rohit1024/skills",
     "sourceType": "github",
     "skillPath": "skills/productivity/setup-teaching-site/SKILL.md",
     "computedHash": "<COMPUTED_SHA256_HASH>"
@@ -143,4 +143,4 @@ All skills in this repository follow the writing-for-agents standards:
 
 ## 📄 License
 
-MIT © Rohit Kharche — https://github.com/rohit1024
+MIT © Rohit Kharche — https://github.com/Rohit1024
