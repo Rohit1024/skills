@@ -64,43 +64,28 @@ Example:
 
 ## 📥 Installation
 
-### Method 1 — Global installation (available in every project)
+### Method 1 — Fast 1-Liner (Recommended)
 
-Clone or copy skills to your global agent skills directory:
-
+Using `degit` (requires Node.js):
 ```bash
-# Clone this repository
-git clone https://github.com/Rohit1024/skills.git ~/skills
+# Project-specific
+npx -y degit Rohit1024/skills/skills/productivity/setup-teaching-site .agents/skills/setup-teaching-site --force
 
-# Symlink or copy any skill globally
+# Global
+npx -y degit Rohit1024/skills/skills/productivity/setup-teaching-site ~/.gemini/skills/setup-teaching-site --force
+```
+### Method 2 — Shell / Tarball (No Node required)
+```bash
+mkdir -p .agents/skills/setup-teaching-site && \
+curl -sL https://github.com/Rohit1024/skills/tarball/main | \
+tar -xz --strip-components=3 -C .agents/skills/setup-teaching-site --wildcards "*/skills/productivity/setup-teaching-site/*"
+```
+### Method 3 — Global Repo Clone
+```bash
+git clone --depth 1 https://github.com/Rohit1024/skills.git ~/skills
 mkdir -p ~/.gemini/skills
 cp -r ~/skills/skills/productivity/setup-teaching-site ~/.gemini/skills/
 ```
-
-### Method 2 — Project-specific installation
-
-Install directly into your target workspace:
-
-```bash
-mkdir -p .agents/skills/setup-teaching-site
-curl -sSL https://raw.githubusercontent.com/Rohit1024/skills/main/skills/productivity/setup-teaching-site/SKILL.md -o .agents/skills/setup-teaching-site/SKILL.md
-```
-
-### Method 3 — Via skills-lock.json
-
-Add the skill entry to your project's `skills-lock.json`:
-
-```json
-{
-  "setup-teaching-site": {
-    "source": "Rohit1024/skills",
-    "sourceType": "github",
-    "skillPath": "skills/productivity/setup-teaching-site/SKILL.md",
-    "computedHash": "<COMPUTED_SHA256_HASH>"
-  }
-}
-```
-
 ---
 
 ## 📂 Repository layout
