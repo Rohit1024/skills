@@ -101,6 +101,8 @@ skills/
             ├── ZENSICAL-CONFIG-TEMPLATE.md  # zensical.toml & GitHub Actions CI
             ├── CURRICULUM-TEMPLATES.md      # docs portal templates & catalogs
             ├── TEACH-SKILL-TEMPLATE.md      # Custom /teach skill & format specs
+            ├── scripts/
+            │   └── validate_mermaid.py      # Automated Mermaid syntax validator
             └── agents/
                 └── openai.yaml              # Agent manifest & policy
 ```

@@ -9,86 +9,69 @@ This document contains the exact files to scaffold into `.agents/skills/teach/` 
 ```markdown
 ---
 name: teach
-description: Teach the user a new skill or concept, within this workspace.
+description: Teach a concept step-by-step within this workspace.
 disable-model-invocation: true
 argument-hint: "What would you like to learn about?"
 ---
 
-The user has asked you to teach them something. This is a stateful request - they intend to learn the topic over multiple sessions.
+# Teaching Workspace
 
-## Teaching Workspace
+Guide the user through multi-session learning grounded in the workspace state.
 
-Treat the current directory as a teaching workspace. The state of their learning is captured in this directory in several files:
+## Workspace State
 
-- `docs/mission.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
-- `docs/cheatsheet/`: A directory of cheatsheets (markdown files) and their `index.md`. These are compressed, command-focused, and visual learnings from the lessons designed for quick reference.
-- `docs/debugging/`: A directory of diagnostic playbooks and error troubleshooting workflows with sequence diagrams.
-- `docs/interview/`: A directory of technical and system design interview questions.
-- `docs/references/resources.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
-- `docs/references/index.md`: An index page for references and official external resource links.
-- `docs/references/glossary.md`: Canonical terminology and standard nomenclature. Use the format in [GLOSSARY-FORMAT.md](./GLOSSARY-FORMAT.md).
-- `./learning-records/*.md`: A directory of learning records, which capture what the user has learned (ADR-style). They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
-- `docs/lessons/*.md`: A directory of lessons. A **lesson** is a single, self-contained Markdown file that teaches one tightly-scoped thing tied to the mission. It is styled for Zensical. This is the primary unit of teaching in this workspace. The lessons list must be maintained in `docs/lessons/index.md`.
-- `NOTES.md`: A scratchpad for you to jot down user preferences, learner profile, or working notes.
+- `docs/mission.md`: The guiding compass and user goals. Ground all teaching here. See [MISSION-FORMAT.md](./MISSION-FORMAT.md).
+- `docs/lessons/`: Sequential lessons (`NNNN-<slug>.md`). Maintained in `docs/lessons/index.md`.
+- `docs/cheatsheet/`: Compressed commands, annotations, and quick references.
+- `docs/debugging/`: Diagnostic playbooks with failure sequence diagrams.
+- `docs/interview/`: Senior technical and system design question bank.
+- `docs/references/`: Official sources (`resources.md`), glossary (`glossary.md`), and reference index (`index.md`).
+- `learning-records/`: ADR-style records of demonstrated user understanding (`NNNN-<slug>.md`). See [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
+- `NOTES.md`: Scratchpad for learner profile and working notes.
 
-## Philosophy
+## Core Rules
 
-To learn at a deep level, the user needs three things:
+1. **Ground in Mission**: Align every lesson with `docs/mission.md`. If unclear, interview the user first.
+2. **High-Trust Knowledge**: Source facts from `docs/references/resources.md`. Verify facts before explaining.
+3. **Storage Strength**: Build retention through active recall, desirable difficulty, and hands-on exercises.
 
-- **Knowledge**, captured from high-quality, high-trust resources
-- **Skills**, acquired through highly-relevant interactive lessons devised by you, based on the knowledge
-- **Wisdom**, which comes from interacting with other learners and practitioners
+## Authoring Lessons
 
-Before `docs/references/resources.md` is well-populated, your focus should be to find high-quality resources which will help the user acquire knowledge. Never trust unverified parametric knowledge.
+1. **File Location**: Save self-contained lessons to `docs/lessons/NNNN-<slug>.md`.
+2. **Catalog Updates**: Check off and link every new lesson in `docs/lessons/index.md`.
+3. **Sidebar Rule**: Expose only top-level section roots in `zensical.toml` `nav` (e.g. `{ "Lessons" = ["lessons/index.md"] }`). Keep individual lessons cataloged inside `docs/lessons/index.md`.
+4. **Bottom Pagination**: Include navigation linking `Previous Lesson | All Lessons (index.md) | Next Lesson`. Update the previous lesson's "Next" link when adding a lesson.
+5. **Visual Diagrams**: Include vertical Mermaid diagrams in every lesson and debugging guide.
+6. **Zensical Styling**: Use admonitions (`!!! note`, `!!! tip`), code annotations, and copy buttons.
 
-### Fluency vs Storage Strength
+## Authoring Reference & Debugging Guides
 
-You should be careful to split between two types of learning:
+- Cheatsheets: `docs/cheatsheet/`
+- Debugging Playbooks: `docs/debugging/` (include failure sequence diagrams)
+- Interview Questions: `docs/interview/`
+- Catalog all guides in their section `index.md` with bottom pagination tables.
 
-- **Fluency strength**: in-the-moment retrieval of knowledge
-- **Storage strength**: long-term retention of knowledge
+## Mermaid Standards & Verification
 
-Fluency can give the user an illusory sense of mastery, but storage strength is the real goal. Design lessons which build long-term retention through desirable difficulty:
+### Layout Standards
+- **Orientation**: Default to `flowchart TD` (top-to-bottom).
+- **Subgraphs**: Stack parallel architectures vertically (`SubA ~~~ SubB`) to maintain readable node widths.
+- **Quoted Labels**: Quote node labels with special characters (e.g., `Node["Item (Details)"]`).
 
-- Using retrieval practice (recall from memory)
-- Spacing (distributing practice over time)
-- Interleaving (mixing up different but related topics in practice)
+### Verification Steps
+Run automated verification before completing your turn:
 
-## Lessons
-
-A lesson is the main artifact you produce — the unit in which knowledge and skills reach the user. Each lesson is one self-contained Markdown file, saved to `docs/lessons/` and titled `0001-<dash-case-name>.md` where the number increments each time.
-
-**Navigation & Cataloging Rules**:
-- **Do NOT add individual lessons to the sidebar in `zensical.toml`**. The `nav` section in `zensical.toml` must only expose top-level section roots (`{ "Lessons" = [ "lessons/index.md" ] }`).
-- **Always update the folder catalog**: Every new lesson MUST be linked and documented with a checkmark in `docs/lessons/index.md`.
-- **Always include Bottom Pagination**: Every lesson must have a bottom navigation block linking to the **Previous Lesson**, the catalog (`[All Lessons](index.md)`), and the **Next Lesson**.
-- **Update Adjacent Predecessors**: Whenever a new lesson is authored, update the previous lesson's "Next" pagination link to point to the newly created lesson.
-- Always verify with `uv run zensical build` to ensure all links resolve cleanly.
-
-**Visual & Mermaid Requirement**:
-- **Always include clear Mermaid diagrams** (flowcharts, sequence diagrams, state diagrams, or architecture maps) in every **Lesson** and **Debugging guide** to visualize runtime flows, lifecycles, and request paths.
-
-A lesson should be styled beautifully based on Zensical's typography and structure (using `!!! note` or `!!! tip` admonitions, code annotations, copy buttons, and Mermaid blocks).
-
-The lesson should be short and completable quickly within working memory. Each lesson should give the user a single tangible win directly tied to the mission within their zone of proximal development.
-
-## The Mission
-
-Every lesson should be tied into the mission in `docs/mission.md`. If unclear or unpopulated, interview the user to clarify concrete outcomes.
-
-## Reference Documents, Debugging & Interview Question Playbooks
-
-While creating lessons, also create and update:
-- Cheatsheets (under `docs/cheatsheet/`)
-- Reference files & glossary (under `docs/references/`)
-- Debugging playbooks with failure sequence diagrams (under `docs/debugging/`)
-- Interview question collections (under `docs/interview/`)
-
-**Cataloging Rules for Reference Documents**:
-1. Never add individual sub-files to the `zensical.toml` sidebar.
-2. Catalog all files within their respective folder's `index.md`.
-3. Include bottom pagination tables linking to the previous guide, folder index, and next guide.
-4. Validate site generation using `uv run zensical build`.
+1. Validate Mermaid syntax (must report 0 errors):
+   ```bash
+   python3 .agents/skills/teach/scripts/validate_mermaid.py
+   ```
+2. Validate documentation build:
+   ```bash
+   uv run zensical build
+   ```
+3. Report completion summary:
+   - Number of Mermaid diagrams validated (0 syntax errors).
+   - Zensical build status.
 ```
 
 ---
@@ -249,4 +232,82 @@ interface:
   short_description: "Learn a concept in a guided workspace"
 policy:
   allow_implicit_invocation: false
+```
+
+---
+
+## 7. `.agents/skills/teach/scripts/validate_mermaid.py`
+
+```python
+#!/usr/bin/env python3
+import re
+import subprocess
+import tempfile
+import os
+import glob
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def validate_block(item):
+    file_path, idx, block = item
+    cleaned_block = block.strip()
+    with tempfile.NamedTemporaryFile('w', suffix='.mmd', delete=False) as tmp:
+        tmp.write(cleaned_block)
+        tmp_path = tmp.name
+    
+    out_svg = tmp_path + '.svg'
+    try:
+        res = subprocess.run(['npx', '-y', '@mermaid-js/mermaid-cli', '-i', tmp_path, '-o', out_svg], capture_output=True, text=True)
+        if res.returncode != 0:
+            return (file_path, idx, cleaned_block, res.stderr.strip())
+        return None
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        if os.path.exists(out_svg):
+            os.remove(out_svg)
+
+def main():
+    pattern = 'docs/**/*.md'
+    files = glob.glob(pattern, recursive=True)
+    print(f"Scanning {len(files)} markdown files for Mermaid blocks...")
+    
+    items = []
+    for file_path in sorted(files):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        blocks = re.findall(r'```\s*mermaid\s*\n(.*?)\n```', content, re.DOTALL)
+        for idx, block in enumerate(blocks, 1):
+            items.append((file_path, idx, block))
+            
+    print(f"Found {len(items)} Mermaid diagrams across the project. Validating concurrently...")
+    
+    errors = []
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(validate_block, item): item for item in items}
+        for future in as_completed(futures):
+            res = future.result()
+            if res:
+                file_path, idx, code, err = res
+                print(f"❌ ERROR in {file_path} (diagram #{idx}):")
+                print(err)
+                print("--- Code ---")
+                print(code)
+                print("------------\n")
+                errors.append(res)
+
+    print(f"\n==========================================")
+    print(f"Mermaid Syntax Verification Report:")
+    print(f"Total diagrams validated: {len(items)}")
+    print(f"Total syntax errors: {len(errors)}")
+    print(f"==========================================")
+    
+    if errors:
+        sys.exit(1)
+    else:
+        print("✅ All Mermaid diagrams passed syntax validation successfully!")
+
+if __name__ == '__main__':
+    main()
 ```
