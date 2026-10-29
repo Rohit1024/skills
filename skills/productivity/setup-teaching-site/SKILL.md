@@ -30,6 +30,8 @@ Execute these steps in order. Each step ends on a completion criterion that must
    .venv/
    site/
    .cache/
+   .tools/
+   node_modules/
    __pycache__/
    *.pyc
    .DS_Store
@@ -113,31 +115,45 @@ Scaffold the `/teach` skill and verification tooling into `.agents/skills/teach/
    ```bash
    mkdir -p .agents/skills/teach/agents .agents/skills/teach/scripts
    ```
-2. Write the 7 skill components from [TEACH-SKILL-TEMPLATE.md](TEACH-SKILL-TEMPLATE.md):
+2. Write the six Markdown/YAML skill components from [TEACH-SKILL-TEMPLATE.md](TEACH-SKILL-TEMPLATE.md):
    - `.agents/skills/teach/SKILL.md`
    - `.agents/skills/teach/MISSION-FORMAT.md`
    - `.agents/skills/teach/LEARNING-RECORD-FORMAT.md`
    - `.agents/skills/teach/RESOURCES-FORMAT.md`
    - `.agents/skills/teach/GLOSSARY-FORMAT.md`
    - `.agents/skills/teach/agents/openai.yaml`
-   - `.agents/skills/teach/scripts/validate_mermaid.py`
-3. Make the validation script executable:
+3. Copy the bundled validator pair from this setup skill's `scripts/` directory into the target skill. Use the bundled files as the source; do not recreate an older validator from memory:
+   - `scripts/validate_mermaid.py` → `.agents/skills/teach/scripts/validate_mermaid.py`
+   - `scripts/validate_mermaid.mjs` → `.agents/skills/teach/scripts/validate_mermaid.mjs`
+4. Use Node.js 22.13 or newer and install locked local rendering dependencies once, preserving existing project dependencies and its package manager. For an npm project:
+   ```bash
+   npm install --save-dev --save-exact @mermaid-js/mermaid-cli@12.0.0 puppeteer@25.16.0
+   ```
+   Commit the package manifest and lockfile. If npm reports a blocked Puppeteer install script, use its package-specific approval command and rerun `npm ci` so its browser is installed. Validation must not run `npx`, install packages, or download tools.
+5. Make the Python validation script executable:
    ```bash
    chmod +x .agents/skills/teach/scripts/validate_mermaid.py
    ```
 
-> **Completion Criterion**: `.agents/skills/teach/SKILL.md`, `scripts/validate_mermaid.py` (executable), and all 5 specification files exist in `.agents/skills/teach/`.
+> **Completion Criterion**: All eight skill components exist, the Python validator is executable, and the locked local Mermaid/Puppeteer dependencies are available.
 
 ---
 
 ### Step 6: Validate & Build Site
 
-1. Run Zensical build to verify configuration and asset links:
+1. Validate diagrams with the installed validator:
+   ```bash
+   uv run python .agents/skills/teach/scripts/validate_mermaid.py
+   ```
+   It renders unique uncached diagrams in one browser and saves successful checks under `.tools/validation/`, outside Zensical's disposable `.cache/`. Cache keys include diagram content, validator code, renderer versions, and the lockfile. Failures are never cached as passes. A warm run must skip browser startup; `--force` deliberately re-renders all selected diagrams. Prefer explicit file paths while iterating on a lesson, followed by a whole-site pass at handoff.
+2. Run one clean Zensical build for initial setup to verify configuration and asset links:
    ```bash
    uv run zensical build --clean
    ```
-2. Verify exit status is 0 and `site/index.html` is generated without warnings or broken links.
-3. Present summary to the user and prompt them to begin learning with `/teach`.
+3. Verify exit status is 0 and `site/index.html` is generated without warnings or broken links.
+4. Present summary to the user and prompt them to begin learning with `/teach`.
+
+For later teaching edits, use `uv run zensical build` once after all edits. Reserve `--clean` for initial setup, publishing, or cache troubleshooting. Keep whole-site link checks when available, and run executable-example tests only when those examples change. Do not run every script after every individual page edit.
 
 > **Completion Criterion**: `uv run zensical build --clean` exits with returncode 0 and produces `site/`.
 
@@ -145,6 +161,7 @@ Scaffold the `/teach` skill and verification tooling into `.agents/skills/teach/
 
 ## Disclosed Reference
 
+- [VALIDATION.md](VALIDATION.md): Fast validator design and upgrade steps for existing teaching sites.
 - [SVGL-INTEGRATION.md](SVGL-INTEGRATION.md): SVGL logo URLs, download commands, and fallback SVG generator.
 - [ZENSICAL-CONFIG-TEMPLATE.md](ZENSICAL-CONFIG-TEMPLATE.md): Canonical `zensical.toml` and `.github/workflows/docs.yml` templates.
 - [CURRICULUM-TEMPLATES.md](CURRICULUM-TEMPLATES.md): Portal templates for `docs/`, `learning-records/`, and `NOTES.md`.

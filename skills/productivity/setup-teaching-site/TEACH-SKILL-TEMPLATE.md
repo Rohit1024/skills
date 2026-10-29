@@ -61,17 +61,21 @@ Guide the user through multi-session learning grounded in the workspace state.
 ### Verification Steps
 Run automated verification before completing your turn:
 
-1. Validate Mermaid syntax (must report 0 errors):
+1. Validate diagrams with the local renderer (must report 0 errors):
    ```bash
-   python3 .agents/skills/teach/scripts/validate_mermaid.py
+   uv run python .agents/skills/teach/scripts/validate_mermaid.py
    ```
-2. Validate documentation build:
+   Successful renders are cached by content and validator/dependency versions. Unchanged diagrams skip Node and browser startup. Append edited Markdown paths for a focused check; use `--force` to re-render all selected diagrams. Dependencies are installed once during setup; never use `npx` or install tools during validation.
+2. Run a whole-site link checker when the project supplies one, so renamed or deleted targets still invalidate incoming links. Run example tests only if executable example code changed.
+3. Validate the documentation build once after all edits, using the incremental command:
    ```bash
    uv run zensical build
    ```
-3. Report completion summary:
-   - Number of Mermaid diagrams validated (0 syntax errors).
+4. Report completion summary:
+   - Number of Mermaid diagrams checked, newly rendered, and reused from cache (0 errors).
    - Zensical build status.
+
+Use a clean build for initial setup or publishing. Do not rebuild the entire site or rerun unrelated scripts after each individual edit.
 ```
 
 ---
@@ -236,78 +240,23 @@ policy:
 
 ---
 
-## 7. `.agents/skills/teach/scripts/validate_mermaid.py`
+## 7–8. Mermaid validator pair
 
-```python
-#!/usr/bin/env python3
-import re
-import subprocess
-import tempfile
-import os
-import glob
-import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
+Copy the bundled files from the setup skill into the target project's teach skill:
 
-def validate_block(item):
-    file_path, idx, block = item
-    cleaned_block = block.strip()
-    with tempfile.NamedTemporaryFile('w', suffix='.mmd', delete=False) as tmp:
-        tmp.write(cleaned_block)
-        tmp_path = tmp.name
-    
-    out_svg = tmp_path + '.svg'
-    try:
-        res = subprocess.run(['npx', '-y', '@mermaid-js/mermaid-cli', '-i', tmp_path, '-o', out_svg], capture_output=True, text=True)
-        if res.returncode != 0:
-            return (file_path, idx, cleaned_block, res.stderr.strip())
-        return None
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-        if os.path.exists(out_svg):
-            os.remove(out_svg)
+| Setup skill source | Target path |
+| --- | --- |
+| `scripts/validate_mermaid.py` | `.agents/skills/teach/scripts/validate_mermaid.py` |
+| `scripts/validate_mermaid.mjs` | `.agents/skills/teach/scripts/validate_mermaid.mjs` |
 
-def main():
-    pattern = 'docs/**/*.md'
-    files = glob.glob(pattern, recursive=True)
-    print(f"Scanning {len(files)} markdown files for Mermaid blocks...")
-    
-    items = []
-    for file_path in sorted(files):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        blocks = re.findall(r'```\s*mermaid\s*\n(.*?)\n```', content, re.DOTALL)
-        for idx, block in enumerate(blocks, 1):
-            items.append((file_path, idx, block))
-            
-    print(f"Found {len(items)} Mermaid diagrams across the project. Validating concurrently...")
-    
-    errors = []
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(validate_block, item): item for item in items}
-        for future in as_completed(futures):
-            res = future.result()
-            if res:
-                file_path, idx, code, err = res
-                print(f"❌ ERROR in {file_path} (diagram #{idx}):")
-                print(err)
-                print("--- Code ---")
-                print(code)
-                print("------------\n")
-                errors.append(res)
+Keep these files together. The Python entrypoint scans Markdown, deduplicates diagrams, and caches successful checks by content and tool versions. The JavaScript helper renders all pending diagrams in one shared browser using the installed Mermaid CLI API. Copy the sources rather than embedding another version of their code in this template.
 
-    print(f"\n==========================================")
-    print(f"Mermaid Syntax Verification Report:")
-    print(f"Total diagrams validated: {len(items)}")
-    print(f"Total syntax errors: {len(errors)}")
-    print(f"==========================================")
-    
-    if errors:
-        sys.exit(1)
-    else:
-        print("✅ All Mermaid diagrams passed syntax validation successfully!")
+Install `@mermaid-js/mermaid-cli@12.0.0` and `puppeteer@25.16.0` as exact development dependencies using the project's package manager. Commit the lockfile. Keep `.tools/` and `node_modules/` ignored. On later checkouts, install dependencies from the lockfile once; neither validator downloads or installs anything.
 
-if __name__ == '__main__':
-    main()
+```bash
+uv run python .agents/skills/teach/scripts/validate_mermaid.py
+uv run python .agents/skills/teach/scripts/validate_mermaid.py docs/lessons/0001-example.md
+uv run python .agents/skills/teach/scripts/validate_mermaid.py --force
 ```
+
+The example lesson path is illustrative; use an existing edited file. `--force` preserves full rendering verification when needed, and a corrupted cache triggers fresh validation. The cache lives in `.tools/validation/` so clean Zensical builds do not erase it.

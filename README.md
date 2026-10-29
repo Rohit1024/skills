@@ -44,6 +44,7 @@ flowchart LR
   - learning-records/ — ADR-style learning records
   - NOTES.md — pedagogical preferences and scratch notes
 - 🤖 Custom `/teach` skill: configured for the site (pagination, Mermaid visualization, sidebar navigation)
+- ⚡ Incremental validation: locked local rendering tools, one shared browser, and successful diagram checks cached by content and tool versions. Routine teaching edits use an incremental site build.
 - 🚀 Automated GitHub Pages CI/CD: ready-to-deploy `.github/workflows/docs.yml` (uses astral-sh/setup-uv)
 
 ### Usage
@@ -59,6 +60,18 @@ Example:
 ```
 /setup-teaching-site "Kubernetes" "Kubernetes & Cloud-Native Architecture Masterclass" "https://rohit1024.github.io/learn-k8s"
 ```
+
+### Update an existing teaching site
+
+Refresh your installed `setup-teaching-site` skill using an installation method below. New projects scaffolded from that updated copy receive the faster validator automatically. Existing projects also contain their own `/teach` validator; follow the [validation upgrade guide](skills/productivity/setup-teaching-site/VALIDATION.md) to replace both validator files, install the locked local dependencies once, and update their teaching verification instructions.
+
+In a generated project, validate diagrams with:
+
+```bash
+uv run python .agents/skills/teach/scripts/validate_mermaid.py
+```
+
+Unchanged successful diagrams skip browser startup. Use `--force` to re-render all selected diagrams, or append existing Markdown file paths for a focused check. Whole-site link checks still catch links to renamed or deleted targets. Clean builds remain part of initial setup and publishing.
 
 ---
 
@@ -101,11 +114,25 @@ skills/
             ├── ZENSICAL-CONFIG-TEMPLATE.md  # zensical.toml & GitHub Actions CI
             ├── CURRICULUM-TEMPLATES.md      # docs portal templates & catalogs
             ├── TEACH-SKILL-TEMPLATE.md      # Custom /teach skill & format specs
+            ├── VALIDATION.md                # Validator behavior & existing-site upgrades
             ├── scripts/
-            │   └── validate_mermaid.py      # Automated Mermaid syntax validator
+            │   ├── validate_mermaid.py      # Content cache & Markdown scanning
+            │   └── validate_mermaid.mjs     # Shared-browser SVG rendering
             └── agents/
                 └── openai.yaml              # Agent manifest & policy
 ```
+
+---
+
+## Validation tests
+
+With Python and Node installed, run the validator regression tests from the repository root:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+These tests use an isolated renderer fixture to verify content reuse, changed-diagram checks, dependency and lockfile invalidation, corrupted caches, error reporting, code-fence handling, and forced/scoped validation. They do not download tools or launch a browser. A real rendering smoke test uses the generated project validator with its installed Mermaid/Puppeteer dependencies.
 
 ---
 
